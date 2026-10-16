@@ -17,6 +17,8 @@ data class TokiaConfig(
     val globalScssFileNames: Set<String> = setOf("variables.scss", "_variables.scss"),
     /** Variable-name prefix that marks a breakpoint in the breakpoints file. */
     val breakpointVariablePrefix: String = "bp-",
+    /** How generated adaptive token getters obtain the window width. */
+    val adaptiveStrategy: AdaptiveStrategy = AdaptiveStrategy.COMPOSITION_LOCAL,
 ) {
     fun isGlobal(scssFileName: String): Boolean = scssFileName in globalScssFileNames
 

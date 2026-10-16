@@ -1,14 +1,18 @@
 package io.tokia.cmp.gradle
 
+import io.tokia.cmp.gradle.core.config.AdaptiveStrategy
 import io.tokia.cmp.gradle.core.config.TokiaConfig
 import io.tokia.cmp.gradle.core.emit.AdaptiveMember
 import io.tokia.cmp.gradle.core.emit.AdaptiveWriter
+import io.tokia.cmp.gradle.core.emit.TokenClass
+import io.tokia.cmp.gradle.core.emit.TokenWriter
 import io.tokia.cmp.gradle.core.media.BreakpointReader
 import io.tokia.cmp.gradle.core.media.ResolvedTier
 import io.tokia.cmp.gradle.guard.StrayDimensionGuard
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /** Covers the `tokia { }` options and the fixed generated-code naming. */
@@ -50,6 +54,49 @@ class OptionsTest {
         assertTrue(code.contains("internal val LocalTokiaAdaptive"), code)
         assertTrue(code.contains("internal fun selectTokiaTier"), code)
         assertTrue(code.contains("fun TokiaAdaptiveScope("), code)
+    }
+
+    private fun adaptiveTokenClass(strategy: AdaptiveStrategy): TokenClass = TokenClass(
+        packageName = "p",
+        className = "CompTokens",
+        colors = emptyList(),
+        sizes = listOf("    val Width = 320.dp"),
+        numbers = emptyList(),
+        adaptive = setOf("Width"),
+        adaptivePackage = "p",
+        adaptiveStrategy = strategy,
+        adaptiveMembers = listOf(
+            AdaptiveMember("CompTokens", "Width", "Dp", mapOf("Regular" to "320.dp", "Tier1" to "560.dp")),
+        ),
+        tiers = listOf(
+            ResolvedTier("Regular", null, 599, mapOf("Width" to "320.dp")),
+            ResolvedTier("Tier1", 600, null, mapOf("Width" to "560.dp")),
+        ),
+    )
+
+    @Test
+    fun strategyCompositionLocal() {
+        val code = TokenWriter.generate(adaptiveTokenClass(AdaptiveStrategy.COMPOSITION_LOCAL))
+        assertTrue(code.contains("LocalTokiaAdaptive.current.CompTokens_Width"), code)
+        assertFalse(code.contains("LocalWindowInfo"), code)
+    }
+
+    @Test
+    fun strategyWindowInfo() {
+        val code = TokenWriter.generate(adaptiveTokenClass(AdaptiveStrategy.WINDOW_INFO))
+        assertTrue(code.contains("LocalWindowInfo.current.containerSize"), code)
+        assertTrue(code.contains("width <= 599.dp -> 320.dp"), code)
+        assertTrue(code.contains("else -> 560.dp"), code)
+        assertFalse(code.contains("LocalTokiaAdaptive"), code)
+    }
+
+    @Test
+    fun strategyWindowSizeClass() {
+        val code = TokenWriter.generate(adaptiveTokenClass(AdaptiveStrategy.WINDOW_SIZE_CLASS))
+        assertTrue(code.contains("currentWindowAdaptiveInfoV2().windowSizeClass.windowWidthSizeClass"), code)
+        assertTrue(code.contains("WindowWidthSizeClass.COMPACT -> 320.dp"), code)
+        assertTrue(code.contains("WindowWidthSizeClass.EXPANDED -> 560.dp"), code)
+        assertFalse(code.contains("LocalTokiaAdaptive"), code)
     }
 
     @Test

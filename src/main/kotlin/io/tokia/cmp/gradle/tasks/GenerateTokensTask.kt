@@ -1,6 +1,7 @@
 package io.tokia.cmp.gradle.tasks
 
 import io.tokia.cmp.gradle.app.TokenPipelineEntrypoint
+import io.tokia.cmp.gradle.core.config.AdaptiveStrategy
 import io.tokia.cmp.gradle.core.config.TokiaConfig
 import io.tokia.cmp.gradle.core.emit.AdaptiveDetector
 import io.tokia.cmp.gradle.core.media.BreakpointReader
@@ -65,6 +66,9 @@ abstract class GenerateTokensTask : DefaultTask() {
     abstract val breakpointVariablePrefix: Property<String>
 
     @get:Input
+    abstract val adaptiveStrategy: Property<String>
+
+    @get:Input
     abstract val sassOutputStyle: Property<String>
 
     @get:Input
@@ -126,6 +130,7 @@ abstract class GenerateTokensTask : DefaultTask() {
             adaptivePackage = adaptivePackage.get(),
             globalScssFileNames = globalScssFileNames.get(),
             breakpointVariablePrefix = breakpointVariablePrefix.get(),
+            adaptiveStrategy = AdaptiveStrategy.fromId(adaptiveStrategy.get()),
         )
         val colors = ColorsFile(scssColorsFile.orNull?.asFile ?: File(root, "styles/_colors.scss"))
         val tokenCompiler = ScssTokenCompiler(compiler, workDir.get().asFile, colors, config) { msg ->

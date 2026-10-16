@@ -81,6 +81,16 @@ abstract class TokiaExtension {
     /** Glob patterns excluding `.scss` files from compilation (default: partials prefixed with `_`). */
     abstract val scssExcludePatterns: ListProperty<String>
 
+    // ── Adaptive runtime ─────────────────────────────────────────────────────
+
+    /**
+     * How generated adaptive token getters obtain the window width:
+     * - `compositionLocal` (default): Tokia owns a local; wrap each window in `TokiaAdaptiveScope { }`.
+     * - `windowInfo`: getters read `LocalWindowInfo`; no wrapper, no extra dependency.
+     * - `windowSizeClass`: getters read `WindowSizeClass`; no wrapper, needs `material3.adaptive`.
+     */
+    abstract val adaptiveStrategy: Property<String>
+
     // ── Dimension guard ──────────────────────────────────────────────────────
 
     /** Dimension literals permitted in component code. */

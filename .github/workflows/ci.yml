@@ -26,8 +26,8 @@ jobs:
       - uses: cachix/install-nix-action@v30
         with:
           # Pin nixpkgs to the same branch the harness pins (tests/nixpkgs.nix), so the plugin's
-          # shell.nix <nixpkgs> matches too.
-          nix_path: nixpkgs=github:NixOS/nixpkgs/nixos-25.11
+          # shell.nix <nixpkgs> matches too. NOTE (ci): must be a NIX_PATH-valid value (channel: or a URL)
+          nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-25.11.tar.gz
 
       # Shared Gradle home for the harness: Gradle distributions + dependencies download once and
       # are reused across cases and across runs.

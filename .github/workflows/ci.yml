@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    # Keep the real default branch here; `release` is the production branch.
+    branches: [ main, master, release ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew build --console=plain
+
+  integration:
+    name: Cross-version happy-path matrix (Nix)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v30
+        with:
+          # Pin nixpkgs to the same branch the harness pins (tests/nixpkgs.nix), so the plugin's
+          # shell.nix <nixpkgs> matches too.
+          nix_path: nixpkgs=github:NixOS/nixpkgs/nixos-25.11
+
+      # Shared Gradle home for the harness: Gradle distributions + dependencies download once and
+      # are reused across cases and across runs.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/tokia-tests
+          key: tokiA-gradle-${{ runner.os }}-${{ hashFiles('tests/cases/*.nix') }}
+          restore-keys: |
+            tokiA-gradle-${{ runner.os }}-
+
+      # Tests the plugin across JVM x Gradle x Kotlin combinations (see tests/README.md).
+      - run: tests/run-all.sh --cached

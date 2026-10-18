@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
 }
 
-group = "io.tokia.cmp"
+group = "io.github.fluxxware"
 version = "0.1.0"
 
 repositories {
@@ -16,26 +16,35 @@ repositories {
 }
 
 dependencies {
-    // KGP is provided by the consumer at runtime (they apply the Kotlin Multiplatform plugin).
-    // Pinned to the consumers' version so the plugin links against the same API surface.
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
+    // THE compatibility floor: compile against the OLDEST supported Gradle API (6.8.3) while the
+    // build itself runs on a modern Gradle. This is what lets the plugin run on Gradle 6.8.3+.
+    compileOnly(gradleApi("6.8.3"))
+    // NOTE: deliberately NO Kotlin Gradle Plugin dependency — the plugin is Kotlin-version-agnostic
+    // and reaches the KMP source sets by reflection (see KmpCompat).
+    compileOnly(kotlin("stdlib"))
     testImplementation(kotlin("test"))
     testImplementation(gradleTestKit())
 }
 
+java {
+    // Bytecode floor: the plugin runs on any JDK 8+ Gradle daemon (Gradle 6.8.3+).
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 kotlin {
-    // JVM 17 floor: loads on every consumer Gradle daemon (8.x on JDK 17, 9.x on JDK 17+).
-    jvmToolchain(17)
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+    }
 }
 
 gradlePlugin {
-    // TODO: point these at the real GitHub repo once created.
-    website.set("https://github.com/equeld/tokia-cmp")
-    vcsUrl.set("https://github.com/equeld/tokia-cmp")
+    website.set("https://github.com/fluxxware/tokia")
+    vcsUrl.set("https://github.com/fluxxware/tokia")
     plugins {
         create("tokiaTheme") {
-            id = "io.tokia.cmp"
-            implementationClass = "io.tokia.cmp.gradle.TokiaPlugin"
+            id = "io.github.fluxxware.tokia"
+            implementationClass = "io.github.fluxxware.tokia.gradle.TokiaPlugin"
             displayName = "Tokia: SCSS -> Kotlin theme tokens"
             description = "Generates Kotlin theme tokens and adaptive dimensions from co-located SCSS."
             tags.set(listOf("kotlin", "multiplatform", "compose", "scss", "sass", "design-tokens", "theme"))
@@ -45,6 +54,12 @@ gradlePlugin {
 
 // The published plugin must apply on the oldest supported Gradle; newer Gradle runs older-built
 // plugins. This matrix proves both ends (see src/test/.../compatibility).
+tasks.jar {
+    // Old Gradle (<8) Kotlin DSL cannot parse the Kotlin 2.x `.kotlin_module` metadata and throws
+    // InvalidProtocolBufferException during build-script compilation. The plugin doesn't need it.
+    exclude("**/*.kotlin_module")
+}
+
 tasks.test {
     useJUnitPlatform()
 }

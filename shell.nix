@@ -19,7 +19,6 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    # Pin JDK 17 so the system's stray Java 8 cannot win, and match the plugin's bytecode floor.
     export JAVA_HOME="${pkgs.jdk17}/lib/openjdk"
     export PATH="${pkgs.jdk17}/lib/openjdk/bin:${pkgs.jdk17}/bin:$PATH"
     export PATH="${pkgs.jdk17}/lib/openjdk/bin:${pkgs.jdk17}/bin:$PATH"

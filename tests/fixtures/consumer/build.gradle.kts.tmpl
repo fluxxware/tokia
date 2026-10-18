@@ -1,0 +1,12 @@
+plugins {
+    kotlin("multiplatform") version "@TOKIA_TEST_KOTLIN@"
+    id("io.github.fluxxware.tokia") version "@TOKIA_TEST_PLUGIN_VERSION@"
+}
+tokia {
+    scssRootDir.set(layout.projectDirectory.dir("src/commonMain/kotlin/ui"))
+    themePackage.set("ui.styles")
+    tokensPackage.set("ui.styles.tokens")
+    adaptivePackage.set("ui.styles")
+    scssBreakpointsFile.set(layout.projectDirectory.file("src/commonMain/kotlin/ui/styles/_breakpoints.scss"))
+}
+kotlin { jvm() }

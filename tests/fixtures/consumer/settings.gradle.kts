@@ -1,0 +1,7 @@
+pluginManagement {
+    repositories { mavenLocal(); gradlePluginPortal(); google(); mavenCentral() }
+}
+dependencyResolutionManagement {
+    repositories { google(); mavenCentral() }
+}
+rootProject.name = "tokia-happypath"

@@ -39,12 +39,15 @@ jobs:
         run: |
           v="${{ steps.version.outputs.value }}"
           url="https://plugins.gradle.org/m2/io/github/fluxxware/tokia/io.github.fluxxware.tokia.gradle.plugin/${v}/io.github.fluxxware.tokia.gradle.plugin-${v}.pom"
-          if curl -fsI "$url" >/dev/null; then
+          # The m2 endpoint 303-redirects to Maven Central, and `curl -f` treats 3xx as success —
+          # so follow redirects and require a real 200 to mean "already published".
+          code=$(curl -sSL -o /dev/null -w '%{http_code}' "$url")
+          if [ "$code" = "200" ]; then
             echo "present=true" >> "$GITHUB_OUTPUT"
             echo "Version ${v} is already published — nothing to do."
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "Version ${v} is new — will publish."
+            echo "Version ${v} is not on the Portal (HTTP ${code}) — will publish."
           fi
 
       - name: Publish to Gradle Plugin Portal
